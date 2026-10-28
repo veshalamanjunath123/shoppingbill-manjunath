@@ -5,13 +5,13 @@ import { addToCart, removeFromCart, deleteItem, clearCart } from './store/cartSl
 import { PRODUCTS } from './products';
 import { calculateBill } from './offers';
 import { saveOrderToFirestore } from './firebase';
-import { ShoppingCart, Tag, CheckCircle, Trash2, Plus, Minus, Store } from 'lucide-react';
+import { ShoppingCart, Tag, CheckCircle, Trash2, Plus, Minus, Store, AlertCircle } from 'lucide-react';
 import './styles.css';
 
 export const App: React.FC = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const [orderStatus, setOrderStatus] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<{ message: string; isError?: boolean } | null>(null);
   const [savingOrder, setSavingOrder] = useState<boolean>(false);
 
   const bill = calculateBill(cartItems);
@@ -21,10 +21,25 @@ export const App: React.FC = () => {
     setSavingOrder(true);
     const res = await saveOrderToFirestore(cartItems, bill, 'Manjunath');
     setSavingOrder(false);
-    if (res.success) {
-      setOrderStatus(`Order saved successfully! Order ID: ${res.id}`);
+    
+    if (res.isFirestore) {
+      setOrderStatus({ message: `Saved directly to Firestore! Order ID: ${res.id}` });
       dispatch(clearCart());
-      setTimeout(() => setOrderStatus(null), 5000);
+      setTimeout(() => setOrderStatus(null), 6000);
+    } else if (res.isLocalFallback) {
+      if (res.reason === 'permission-denied') {
+        setOrderStatus({ 
+          message: `Saved locally! (Firestore security rules locked write access - see Firestore Rules in Console)`,
+          isError: true 
+        });
+      } else {
+        setOrderStatus({ 
+          message: `Saved locally! (Firestore connection timed out - enable test mode rules)`,
+          isError: true 
+        });
+      }
+      dispatch(clearCart());
+      setTimeout(() => setOrderStatus(null), 8000);
     }
   };
 
@@ -44,7 +59,7 @@ export const App: React.FC = () => {
           <div className="product-grid">
             {PRODUCTS.map(product => (
               <div key={product.id} className="product-card">
-                <img src={product.image} alt={product.name} className="product-img" />
+                <img src={product.image} alt={product.name} className="product-img" loading="lazy" />
                 <div className="product-info">
                   <div className="product-name">{product.name}</div>
                   <div className="product-price">£{product.price.toFixed(2)} <span style={{ fontSize: '0.8rem', color: '#64748b' }}>/{product.unit}</span></div>
@@ -160,8 +175,14 @@ export const App: React.FC = () => {
                 </button>
 
                 {orderStatus && (
-                  <div className="toast">
-                    {orderStatus}
+                  <div 
+                    className="toast" 
+                    style={orderStatus.isError ? { background: '#fef2f2', borderColor: '#fca5a5', color: '#991b1b' } : {}}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                      {orderStatus.isError ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+                      {orderStatus.message}
+                    </div>
                   </div>
                 )}
               </>
