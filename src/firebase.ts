@@ -3,12 +3,12 @@ import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/fire
 import { BillCalculation, CartItem } from './types';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDummyApiKeyForManjunathApp123456789",
+  apiKey: "AIzaSyCaEl8uHDySQami6jQNaOHxNDPb1Nmtr4U",
   authDomain: "shoppingbill-manjunath.firebaseapp.com",
   projectId: "shoppingbill-manjunath",
-  storageBucket: "shoppingbill-manjunath.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:manjunathappabcdef123456"
+  storageBucket: "shoppingbill-manjunath.firebasestorage.app",
+  messagingSenderId: "16500399661",
+  appId: "1:16500399661:web:31947268ad1ec60f81e2a4"
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
